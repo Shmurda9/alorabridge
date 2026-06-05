@@ -268,3 +268,4 @@
 {"level":"info","message":"::ffff:127.0.0.1 - - [04/Jun/2026:15:32:40 +0000] \"GET /api/jobs HTTP/1.1\" 304 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:151.0) Gecko/20100101 Firefox/151.0\"","service":"remotejob-api","timestamp":"2026-06-04T15:32:40.699Z"}
 {"level":"info","message":"::ffff:127.0.0.1 - - [04/Jun/2026:15:32:40 +0000] \"GET /api/jobs HTTP/1.1\" 304 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:151.0) Gecko/20100101 Firefox/151.0\"","service":"remotejob-api","timestamp":"2026-06-04T15:32:40.726Z"}
 {"level":"info","message":"🚀 Server running on port 5000 in development mode","service":"remotejob-api","timestamp":"2026-06-05T07:03:20.170Z"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","service":"remotejob-api","timestamp":"2026-06-05T16:14:03.145Z"}
