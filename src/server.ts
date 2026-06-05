@@ -22,7 +22,11 @@ const app = express();
 app.use(helmet());
 app.use(cors({
   origin: process.env.NODE_ENV === "production" 
-    ? ["https://AloraBridge.com", "https://www.AloraBridge.com"] 
+    ? [
+        "https://AloraBridge.com", 
+        "https://www.AloraBridge.com", 
+        "https://alorabridge-frontend-ekz1.vercel.app"
+      ] 
     : "*",
   credentials: true,
 }));
