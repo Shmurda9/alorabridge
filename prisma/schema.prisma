@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -34,7 +34,7 @@ model Job {
   type        String   @default("Full-time")
   salary      String?
   description String
-  requirements String  // <--- Changed this from String[] to String
+  requirements String[]  // <--- Upgraded to String[] for PostgreSQL!
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
