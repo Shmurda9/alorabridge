@@ -45,7 +45,7 @@ npm run db:seed
 npm run dev
 ```
 
-Server will start on `http://localhost:5000`
+Server will start on `https://alorabridge.onrender.com`
 
 ## API Endpoints
 
