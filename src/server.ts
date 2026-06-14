@@ -16,6 +16,7 @@ import jobRoutes from "./routes/jobRoutes";
 import applicationRoutes from "./routes/applicationRoutes";
 import analyticsRoutes from "./routes/analyticsRoutes";
 import contactRoutes from "./routes/contactRoutes";
+
 const app = express();
 
 // Security middleware
@@ -25,7 +26,8 @@ app.use(cors({
     ? [
         "https://AloraBridge.com", 
         "https://www.AloraBridge.com", 
-        "https://alorabridge-frontend-ekz1.vercel.app"
+        "https://alorabridge-frontend-ekz1.vercel.app",
+        "https://alorabridge-frontend-y58t-m3bqt5t2v-shmurda9s-projects.vercel.app" // <-- Added your new Vercel frontend URL here
       ] 
     : "*",
   credentials: true,
@@ -71,6 +73,7 @@ app.use(errorHandler);
 const PORT = parseInt(env.PORT);
 
 app.listen(PORT, () => {
+  // Added the missing backticks here so the variables work properly
   logger.info(`🚀 Server running on port ${PORT} in ${env.NODE_ENV} mode`);
 });
 
