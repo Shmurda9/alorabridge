@@ -284,3 +284,7 @@
 {"level":"info","message":"Admin: admin@AloraBridge.com / Admin123!","service":"remotejob-api","timestamp":"2026-06-06T09:59:17.483Z"}
 {"level":"info","message":"HR: hr@AloraBridge.com / Hr123!","service":"remotejob-api","timestamp":"2026-06-06T09:59:17.486Z"}
 {"level":"info","message":"🚀 Server running on port 5000 in development mode","service":"remotejob-api","timestamp":"2026-06-13T22:41:05.879Z"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","service":"remotejob-api","timestamp":"2026-06-15T08:20:19.527Z"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","service":"remotejob-api","timestamp":"2026-06-15T08:44:20.401Z"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","service":"remotejob-api","timestamp":"2026-06-15T08:44:34.088Z"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","service":"remotejob-api","timestamp":"2026-06-15T08:45:11.454Z"}

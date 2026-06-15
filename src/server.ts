@@ -28,7 +28,8 @@ app.use(cors({
         "https://www.AloraBridge.com", 
         "https://alorabridge-frontend-ekz1.vercel.app",
         "https://alorabridge-frontend-y58t-m3bqt5t2v-shmurda9s-projects.vercel.app",
-        "https://alorabridge-frontend-y58t.vercel.app" // <-- Added the new shorter Vercel URL
+        "https://alorabridge-frontend-y58t.vercel.app",
+        "http://localhost:3000"
       ] 
     : "*",
   credentials: true,
