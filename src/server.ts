@@ -20,6 +20,7 @@ import contactRoutes from "./routes/contactRoutes";
 const app = express();
 
 // Security middleware
+app.enable('trust proxy');
 app.use(helmet());
 app.use(cors({
   origin: process.env.NODE_ENV === "production" 
