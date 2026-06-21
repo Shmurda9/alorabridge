@@ -1,11 +1,17 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import { logger } from "./logger";
 
-// Initialize Resend with your environment variable
-const resend = new Resend(process.env.RESEND_API_KEY);
+// 1. Configure the Gmail transporter using environment variables
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.SMTP_USER, // Your Gmail address
+    pass: process.env.SMTP_PASS, // Your 16-letter Gmail App Password
+  },
+});
 
-// Since you are in the Sandbox environment, this email MUST go to your verified Resend account email.
-// Once you add a custom domain later, you can dynamically change this back to 'email' (the candidate's email).
+// Since you are testing, you can change this to false if you want it to go to the real candidate's email
+const USE_TEST_RECEIVER = true; 
 const TEMPORARY_TEST_RECEIVER = "orchardglenbernie@gmail.com"; 
 
 /**
@@ -13,9 +19,11 @@ const TEMPORARY_TEST_RECEIVER = "orchardglenbernie@gmail.com";
  */
 export async function sendApplicationConfirmation(email: string, name: string, jobTitle: string) {
   try {
-    const { data, error } = await resend.emails.send({
-      from: "AloraBridge <onboarding@resend.dev>",
-      to: [process.env.NODE_ENV === "production" ? email : TEMPORARY_TEST_RECEIVER],
+    const targetEmail = USE_TEST_RECEIVER ? TEMPORARY_TEST_RECEIVER : email;
+
+    await transporter.sendMail({
+      from: `AloraBridge <${process.env.SMTP_USER}>`, // MUST be your Gmail account
+      to: targetEmail,
       subject: `Application Received: ${jobTitle} at AloraBridge`,
       html: `
         <!DOCTYPE html>
@@ -60,12 +68,7 @@ export async function sendApplicationConfirmation(email: string, name: string, j
       `,
     });
 
-    if (error) {
-      logger.error("Resend API layout error details:", error);
-      throw error;
-    }
-
-    logger.info(`Automated confirmation email successfully dispatched to ${email}`);
+    logger.info(`Automated confirmation email successfully dispatched to ${targetEmail}`);
   } catch (err) {
     logger.error("Failed executing sendApplicationConfirmation utility:", err);
   }
@@ -76,13 +79,15 @@ export async function sendApplicationConfirmation(email: string, name: string, j
  */
 export async function sendInterviewInvitation(email: string, name: string, jobTitle: string, date: string) {
   try {
-    await resend.emails.send({
-      from: "AloraBridge <onboarding@resend.dev>",
-      to: [process.env.NODE_ENV === "production" ? email : TEMPORARY_TEST_RECEIVER],
+    const targetEmail = USE_TEST_RECEIVER ? TEMPORARY_TEST_RECEIVER : email;
+
+    await transporter.sendMail({
+      from: `AloraBridge <${process.env.SMTP_USER}>`,
+      to: targetEmail,
       subject: `Interview Invitation: ${jobTitle} at AloraBridge`,
       html: `<p>Hi ${name}, we would love to interview you for the ${jobTitle} role on ${date}.</p>`,
     });
-    logger.info(`Interview invite email sent to ${email}`);
+    logger.info(`Interview invite email sent to ${targetEmail}`);
   } catch (err) {
     logger.error("Failed sending interview invite email:", err);
   }
