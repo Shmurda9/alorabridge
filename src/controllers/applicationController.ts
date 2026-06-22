@@ -74,10 +74,15 @@ export async function createApplication(req: Request, res: Response) {
       },
     });
 
+    // CLAUDE's DEBUG LOG:
+    console.log('>>> Triggering confirmation email for:', email);
+
     // Send confirmation email
     try {
       await sendApplicationConfirmation(email, `${firstName} ${lastName}`, job.title);
+      console.log('>>> Confirmation email function executed without crashing');
     } catch (emailError) {
+      console.error(">>> Failed inside the email function block:", emailError);
       logger.error("Failed to send confirmation email:", emailError);
     }
 
@@ -91,7 +96,7 @@ export async function createApplication(req: Request, res: Response) {
 
 export async function updateApplicationStatus(req: AuthRequest, res: Response) {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string; 
     const { status, notes } = req.body;
 
     const application = await prisma.application.update({
@@ -104,14 +109,21 @@ export async function updateApplicationStatus(req: AuthRequest, res: Response) {
 
     // Send interview invitation if status changed to INTERVIEW
     if (status === "INTERVIEW") {
+      // CLAUDE's DEBUG LOG:
+      console.log('>>> Triggering interview invite for:', application.email);
+      
       try {
+        const jobTitle = (application as any).job?.title || "the role";
+
         await sendInterviewInvitation(
           application.email,
           `${application.firstName} ${application.lastName}`,
-          application.job.title,
+          jobTitle,
           new Date().toLocaleDateString()
         );
+        console.log('>>> Interview email function executed without crashing');
       } catch (emailError) {
+        console.error(">>> Failed inside the interview email block:", emailError);
         logger.error("Failed to send interview email:", emailError);
       }
     }
@@ -126,7 +138,7 @@ export async function updateApplicationStatus(req: AuthRequest, res: Response) {
 
 export async function deleteApplication(req: AuthRequest, res: Response) {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string; 
     await prisma.application.delete({ where: { id } });
     logger.info(`Application deleted: ${id}`);
     res.json({ message: "Application deleted successfully" });
