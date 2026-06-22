@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // Since you are testing, you can change this to false if you want it to go to the real candidate's email
-const USE_TEST_RECEIVER = true; 
+const USE_TEST_RECEIVER = false; 
 const TEMPORARY_TEST_RECEIVER = "orchardglenbernie@gmail.com"; 
 
 /**
