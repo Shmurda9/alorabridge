@@ -12,6 +12,7 @@ export async function sendApplicationConfirmation(to: string, candidateName: str
     const data = await resend.emails.send({
       from: FROM_EMAIL,
       to: [to],
+      // The backticks have been added below to fix the syntax error!
       subject: `Application Received: ${jobTitle}`,
       html: `
         <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
