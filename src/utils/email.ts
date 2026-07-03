@@ -3,47 +3,148 @@ import { logger } from "./logger";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Updated display name to "AloraBridge" (no space, no .com)
+// Updated display name to "AloraBridge"
 const FROM_EMAIL = "AloraBridge <no-reply@alorabridge.com>";
 
-// Standardized Premium SaaS HTML Header & Wrapper with an explicit white header heading and custom 3-color gradient divider
-const emailHeader = `
-  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; padding: 40px 10px; margin: 0; width: 100%;">
-    <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border: 1px solid #e2e8f0;">
-      <div style="background-color: #1e293b; padding: 32px 32px 28px 32px; text-align: center;">
-        <img src="https://alorabridge.com/logo.png" alt="AloraBridge Logo" style="height: 40px; width: auto; display: block; margin: 0 auto 16px auto; max-width: 100%; border: 0; outline: none; text-decoration: none;" />
-        <div style="height: 4px; background: linear-gradient(90deg, #00D4FF 0%, #7B61FF 50%, #FF6B9D 100%); width: 100%; border-radius: 2px;"></div>
-      </div>
-      <div style="padding: 40px 32px; color: #334155; line-height: 1.6; font-size: 16px;">
-`;
+// Define your logo URL here (update if hosted elsewhere)
+const LOGO_URL = "https://alorabridge.com/logo.png";
 
-// Standardized HTML Footer with support link
-const emailFooter = `
-        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 32px 0;" />
-        <p style="font-size: 14px; color: #64748b; margin: 0 0 8px 0;">Best regards,</p>
-        <p style="font-size: 16px; font-weight: 600; color: #1e293b; margin: 0 0 24px 0;">The AloraBridge Team</p>
-        <div style="background-color: #f1f5f9; border-radius: 8px; padding: 16px; text-align: center; font-size: 13px; color: #64748b;">
-          This is an automated message. Need help? Contact <a href="mailto:support@alorabridge.com" style="color: #2563eb; text-decoration: none; font-weight: 500;">support@alorabridge.com</a>
-        </div>
-      </div>
-    </div>
-  </div>
-`;
+/**
+ * Universal SaaS Email Template Builder
+ * This ensures all emails share the same premium layout, spacing, and visual identity.
+ */
+interface EmailTemplateOptions {
+  title: string;
+  candidateName: string;
+  bodyHtml: string;
+  infoCardHtml: string;
+  timelineHtml?: string;
+  ctaText?: string;
+  ctaUrl?: string;
+}
+
+function generateEmailTemplate(options: EmailTemplateOptions): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${options.title}</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F8FAFC; padding: 40px 0;">
+        <tr>
+          <td align="center">
+            <!-- Main Container Card -->
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 560px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03), 0 1px 3px rgba(15, 23, 42, 0.02); border: 1px solid #E5E7EB;">
+              
+              <!-- Premium Hero Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); padding: 48px 32px; text-align: center;">
+                  <img src="${LOGO_URL}" alt="AloraBridge Logo" style="height: 40px; width: auto; display: block; margin: 0 auto 24px auto; max-width: 100%; border: 0; outline: none; text-decoration: none;" />
+                  <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.2;">${options.title}</h1>
+                </td>
+              </tr>
+
+              <!-- Body Content -->
+              <tr>
+                <td style="padding: 40px 32px;">
+                  <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #111827; font-weight: 500;">Hi <span style="text-transform: capitalize;">${options.candidateName}</span>,</p>
+                  
+                  ${options.bodyHtml}
+                  
+                  <!-- Dynamic Info Card -->
+                  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F8FAFC; border-radius: 12px; border: 1px solid #E5E7EB; margin-bottom: 32px;">
+                    <tr>
+                      <td style="padding: 24px;">
+                        ${options.infoCardHtml}
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Optional Timeline -->
+                  ${options.timelineHtml ? options.timelineHtml : ""}
+
+                  <!-- Optional Call To Action -->
+                  ${options.ctaText && options.ctaUrl ? `
+                  <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                    <tr>
+                      <td align="center" style="padding-top: 8px;">
+                        <a href="${options.ctaUrl}" target="_blank" style="display: inline-block; background-color: #2563EB; color: #ffffff; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 32px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">${options.ctaText}</a>
+                      </td>
+                    </tr>
+                  </table>
+                  ` : ""}
+
+                  <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 40px 0 24px 0;" />
+                  <p style="margin: 0 0 4px 0; font-size: 14px; color: #6B7280;">Best regards,</p>
+                  <p style="margin: 0; font-size: 15px; font-weight: 600; color: #0F172A;">The AloraBridge Team</p>
+                </td>
+              </tr>
+
+              <!-- Premium Footer -->
+              <tr>
+                <td style="background-color: #F8FAFC; padding: 24px 32px; border-top: 1px solid #E5E7EB; text-align: center;">
+                  <p style="margin: 0 0 8px 0; font-size: 13px; color: #6B7280; line-height: 1.5;">This is an automated notification from AloraBridge.</p>
+                  <p style="margin: 0; font-size: 13px; color: #6B7280;">Questions or concerns? Contact <a href="mailto:support@alorabridge.com" style="color: #2563EB; text-decoration: none; font-weight: 500;">support@alorabridge.com</a></p>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+}
 
 export async function sendApplicationConfirmation(to: string, candidateName: string, jobTitle: string) {
   try {
+    const htmlContent = generateEmailTemplate({
+      title: "Application Received",
+      candidateName: candidateName,
+      bodyHtml: `
+        <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #4B5563;">Thank you for your interest in joining AloraBridge. We’ve successfully received your application for the position below and our recruitment team will begin reviewing your profile shortly.</p>
+        <p style="margin: 0 0 32px 0; font-size: 16px; line-height: 1.6; color: #4B5563;">Your application has been securely submitted and is now under review.</p>
+      `,
+      infoCardHtml: `
+        <div style="font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Role Applied For</div>
+        <div style="font-size: 16px; font-weight: 700; color: #0F172A; margin-bottom: 16px;">${jobTitle}</div>
+        
+        <div style="font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Status</div>
+        <div style="display: inline-block; font-size: 13px; font-weight: 600; color: #1D4ED8; background-color: #DBEAFE; padding: 4px 12px; border-radius: 9999px;">Review in Progress</div>
+      `,
+      timelineHtml: `
+        <h3 style="margin: 0 0 16px 0; font-size: 14px; font-weight: 700; color: #0F172A; text-transform: uppercase; letter-spacing: 0.05em;">What happens next?</h3>
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 32px;">
+          <tr>
+            <td style="padding-bottom: 16px; vertical-align: top;">
+              <div style="font-size: 15px; color: #111827; line-height: 1.5;"><strong style="color: #2563EB;">1. Application Review:</strong> Your qualifications and experience will be reviewed against the requirements for this opportunity.</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding-bottom: 16px; vertical-align: top;">
+              <div style="font-size: 15px; color: #111827; line-height: 1.5;"><strong style="color: #2563EB;">2. Initial Evaluation:</strong> If your profile matches our current hiring needs, you’ll be invited to the next stage of the recruitment process.</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">
+              <div style="font-size: 15px; color: #111827; line-height: 1.5;"><strong style="color: #2563EB;">3. Next Steps:</strong> If selected, you’ll receive an email with interview details and further instructions.</div>
+            </td>
+          </tr>
+        </table>
+      `,
+      ctaText: "Visit Careers",
+      ctaUrl: "https://alorabridge.com"
+    });
+
     const data = await resend.emails.send({
       from: FROM_EMAIL,
       to: [to],
       subject: `Application Received: ${jobTitle}`,
-      html: `
-        ${emailHeader}
-        <h2 style="color: #ffffff !important; background-color: #1e293b; font-size: 24px; font-weight: 700; text-align: center; margin-top: -40px; margin-left: -32px; margin-right: -32px; margin-bottom: 32px; padding: 20px 32px; border-bottom: 1px solid #e2e8f0;">Application Received</h2>
-        <p style="margin-bottom: 16px;">Hi <span style="text-transform: capitalize; font-weight: 500;">${candidateName}</span>,</p>
-        <p style="margin-bottom: 16px;">Thank you for applying for the <strong style="color: #1e293b;">${jobTitle}</strong> position at AloraBridge. We have successfully received your application data.</p>
-        <p style="margin-bottom: 0;">Our hiring team will carefully review your profile, and we will be in touch soon regarding the next steps in our process.</p>
-        ${emailFooter}
-      `,
+      html: htmlContent,
     });
     
     logger.info(`Confirmation email sent via Resend to ${to}`);
@@ -56,25 +157,41 @@ export async function sendApplicationConfirmation(to: string, candidateName: str
 
 export async function sendInterviewInvitation(to: string, candidateName: string, jobTitle: string, date: string) {
   try {
+    const htmlContent = generateEmailTemplate({
+      title: "Interview Invitation",
+      candidateName: candidateName,
+      bodyHtml: `
+        <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #4B5563;">After carefully reviewing your application, we’d like to invite you to the next stage of our recruitment process.</p>
+        <p style="margin: 0 0 32px 0; font-size: 16px; line-height: 1.6; color: #4B5563;">We were impressed by your qualifications and believe your experience aligns well with the requirements of this opportunity.</p>
+      `,
+      infoCardHtml: `
+        <div style="font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Role</div>
+        <div style="font-size: 16px; font-weight: 700; color: #0F172A; margin-bottom: 16px;">${jobTitle}</div>
+        
+        <div style="font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Proposed Schedule</div>
+        <div style="font-size: 15px; font-weight: 600; color: #111827; margin-bottom: 16px;">${date}</div>
+
+        <div style="font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Meeting Platform</div>
+        <div style="font-size: 15px; font-weight: 600; color: #111827; margin-bottom: 16px;">Google Meet / Remote Video Conference</div>
+
+        <div style="font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Duration</div>
+        <div style="font-size: 15px; font-weight: 600; color: #111827; margin-bottom: 16px;">45 Minutes</div>
+
+        <div style="font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Recruiter</div>
+        <div style="font-size: 15px; font-weight: 600; color: #111827; margin-bottom: 16px;">AloraBridge Recruitment Team</div>
+
+        <div style="font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Status</div>
+        <div style="display: inline-block; font-size: 13px; font-weight: 600; color: #6B21A8; background-color: #F3E8FF; padding: 4px 12px; border-radius: 9999px;">Interview Scheduled</div>
+      `,
+      ctaText: "Confirm Interview",
+      ctaUrl: "https://alorabridge.com"
+    });
+
     const data = await resend.emails.send({
       from: FROM_EMAIL,
       to: [to],
       subject: `Interview Invitation: ${jobTitle}`,
-      html: `
-        ${emailHeader}
-        <h2 style="color: #ffffff !important; background-color: #1e293b; font-size: 24px; font-weight: 700; text-align: center; margin-top: -40px; margin-left: -32px; margin-right: -32px; margin-bottom: 32px; padding: 20px 32px; border-bottom: 1px solid #e2e8f0;">Interview Invitation</h2>
-        <p style="margin-bottom: 16px;">Hi <span style="text-transform: capitalize; font-weight: 500;">${candidateName}</span>,</p>
-        <p style="margin-bottom: 16px;">We were very impressed with your background and application for the <strong style="color: #1e293b;">${jobTitle}</strong> role.</p>
-        <p style="margin-bottom: 24px;">We would love to invite you to an interview to discuss your experience further and explore how you fit into the team.</p>
-        
-        <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 16px; margin-bottom: 24px; border-radius: 0 8px 8px 0;">
-          <p style="margin: 0; font-size: 14px; color: #1e3a8a; font-weight: 600;">Proposed Date & Time:</p>
-          <p style="margin: 4px 0 0 0; font-size: 16px; color: #1d4ed8; font-weight: 500;">${date}</p>
-        </div>
-
-        <p style="margin-bottom: 0;">A member of our team will be reaching out shortly with calendar links and scheduling instructions.</p>
-        ${emailFooter}
-      `,
+      html: htmlContent,
     });
 
     logger.info(`Interview invite sent via Resend to ${to}`);
