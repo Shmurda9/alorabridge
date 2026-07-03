@@ -4,8 +4,7 @@ import { logger } from "./logger";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const FROM_EMAIL = "AloraBridge <no-reply@alorabridge.com>";
-const LOGO_URL = "https://alorabridge.com/logo.png";
-
+const LOGO_URL = "https://alorabridge.com/my-logo/alorabridge-logo.jpg";
 /**
  * AloraBridge Brand Colors
  * Strictly enforced palette for all email templates.
@@ -31,7 +30,7 @@ function createHero(title: string): string {
   return `
     <tr>
       <td style="background: linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.secondary} 100%); background-color: ${COLORS.primary}; padding: 48px 32px; text-align: center;">
-        <img src="${LOGO_URL}" alt="AloraBridge" style="height: 36px; width: auto; display: block; margin: 0 auto 24px auto; max-width: 100%; border: 0; outline: none; text-decoration: none;" />
+        <img src="${LOGO_URL}" alt="AloraBridge" style="color: ${COLORS.card}; font-size: 24px; font-weight: bold; font-family: sans-serif; height: 36px; width: auto; display: block; margin: 0 auto 24px auto; max-width: 100%; border: 0; outline: none; text-decoration: none;" />
         <h1 style="color: ${COLORS.card}; margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.2;">${title}</h1>
       </td>
     </tr>
