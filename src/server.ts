@@ -25,8 +25,8 @@ app.use(helmet());
 app.use(cors({
   origin: process.env.NODE_ENV === "production" 
     ? [
-        "https://AloraBridge.com", 
-        "https://www.AloraBridge.com", 
+        "https://alorabridge.com", 
+        "https://www.alorabridge.com", 
         "https://alorabridge-frontend-ekz1.vercel.app",
         "https://alorabridge-frontend-y58t-m3bqt5t2v-shmurda9s-projects.vercel.app",
         "https://alorabridge-frontend-y58t.vercel.app",
