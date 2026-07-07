@@ -2,7 +2,13 @@ import { Request, Response } from "express";
 import { prisma } from "../config/database";
 import { logger } from "../utils/logger";
 import { AuthRequest } from "../middleware/auth";
-import { sendApplicationConfirmation, sendInterviewInvitation } from "../utils/email";
+import { 
+  sendApplicationConfirmation, 
+  sendInterviewInvitation,
+  sendHROnboarding,
+  sendOperationsAlert,
+  sendRejectionEmail 
+} from "../utils/email";
 
 export async function getAllApplications(req: AuthRequest, res: Response) {
   try {
@@ -74,13 +80,11 @@ export async function createApplication(req: Request, res: Response) {
       },
     });
 
-    // CLAUDE's DEBUG LOG:
-    console.log('>>> Triggering confirmation email for:', email);
+    console.log(">>> Triggering confirmation email for:", email);
 
-    // Send confirmation email
     try {
       await sendApplicationConfirmation(email, `${firstName} ${lastName}`, job.title);
-      console.log('>>> Confirmation email function executed without crashing');
+      console.log(">>> Confirmation email function executed without crashing");
     } catch (emailError) {
       console.error(">>> Failed inside the email function block:", emailError);
       logger.error("Failed to send confirmation email:", emailError);
@@ -101,31 +105,40 @@ export async function updateApplicationStatus(req: AuthRequest, res: Response) {
 
     const application = await prisma.application.update({
       where: { id },
-      data: { status, notes },
+      data: { 
+        status: status as any, 
+        notes 
+      },
       include: {
         job: { select: { title: true } },
       },
     });
 
-    // Send interview invitation if status changed to INTERVIEW
-    if (status === "INTERVIEW") {
-      // CLAUDE's DEBUG LOG:
-      console.log('>>> Triggering interview invite for:', application.email);
-      
-      try {
-        const jobTitle = (application as any).job?.title || "the role";
+    const jobTitle = (application as any).job?.title || "the role";
+    const candidateName = `${application.firstName} ${application.lastName}`;
+    const candidateEmail = application.email;
 
-        await sendInterviewInvitation(
-          application.email,
-          `${application.firstName} ${application.lastName}`,
-          jobTitle,
-          new Date().toLocaleDateString()
-        );
-        console.log('>>> Interview email function executed without crashing');
-      } catch (emailError) {
-        console.error(">>> Failed inside the interview email block:", emailError);
-        logger.error("Failed to send interview email:", emailError);
+    // EMAIL TRIGGER PIPELINE
+    try {
+      if (status === "INTERVIEW_SCHEDULED") {
+        console.log(`>>> Triggering interview invite for: ${candidateEmail}`);
+        await sendInterviewInvitation(candidateEmail, candidateName, jobTitle, new Date().toLocaleDateString());
+      
+      } else if (status === "HR_ONBOARDING") {
+        console.log(`>>> Triggering HR Onboarding for: ${candidateEmail}`);
+        await sendHROnboarding(candidateEmail, candidateName, jobTitle);
+      
+      } else if (status === "APPROVED") {
+        console.log(`>>> Triggering Operations Alert for: ${candidateName}`);
+        await sendOperationsAlert(candidateName, jobTitle);
+      
+      } else if (status === "REJECTED") {
+        console.log(`>>> Triggering Rejection email for: ${candidateEmail}`);
+        await sendRejectionEmail(candidateEmail, candidateName, jobTitle);
       }
+    } catch (emailError) {
+      console.error(`>>> Failed to send ${status} email:`, emailError);
+      logger.error(`Failed to send email for status ${status}:`, emailError);
     }
 
     logger.info(`Application ${id} status updated to ${status}`);

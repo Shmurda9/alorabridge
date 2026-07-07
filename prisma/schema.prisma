@@ -27,17 +27,17 @@ model User {
 }
 
 model Job {
-  id          String   @id @default(uuid())
-  title       String
-  department  String
-  location    String   @default("Remote")
-  type        String   @default("Full-time")
-  salary      String?
-  description String
-  requirements String[]  // <--- Upgraded to String[] for PostgreSQL!
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(uuid())
+  title        String
+  department   String
+  location     String   @default("Remote")
+  type         String   @default("Full-time")
+  salary       String?
+  description  String
+  requirements String[] 
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
   applications Application[]
@@ -56,7 +56,7 @@ model Application {
   linkedIn    String?
   resumeUrl   String?
   coverLetter String?
-  status      ApplicationStatus @default(PENDING)
+  status      ApplicationStatus @default(NEW_APPLICATION)
   notes       String?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
@@ -81,18 +81,25 @@ model Activity {
   @@map("activities")
 }
 
+// Upgraded to match your exact future employee roles
 enum Role {
   ADMIN
+  CAREERS
   HR
+  OPERATIONS
   WORKER
   CLIENT
 }
 
+// Upgraded to match your exact recruitment pipeline
 enum ApplicationStatus {
-  PENDING
-  REVIEWING
-  INTERVIEW
-  OFFER
-  HIRED
+  NEW_APPLICATION
+  UNDER_REVIEW
+  INTERVIEW_SCHEDULED
+  INTERVIEW_COMPLETED
+  APPROVED
+  HR_ONBOARDING
+  OPERATIONS_ONBOARDING
+  EMPLOYEE_ACTIVE
   REJECTED
 }
