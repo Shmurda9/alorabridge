@@ -4,16 +4,21 @@ import { logger } from "../utils/logger";
 import { AuthRequest } from "../middleware/auth";
 import { 
   sendApplicationConfirmation, 
+  sendUnderReviewEmail,
   sendInterviewInvitation,
+  sendInterviewCompletedEmail,
+  sendApprovedEmail,
   sendHROnboarding,
-  sendOperationsAlert,
+  sendOpsOnboardingCandidateEmail,
+  sendOperationsInternalAlert,
+  sendEmployeeActiveEmail,
   sendRejectionEmail 
 } from "../utils/email";
 
-export async function getAllApplications(req: AuthRequest, res: Response) {
+// 1. Get All Applications
+export async function getAllApplications(req: Request, res: Response) {
   try {
     const { status, jobId } = req.query;
-
     const where: any = {};
     if (status) where.status = status as string;
     if (jobId) where.jobId = jobId as string;
@@ -21,142 +26,130 @@ export async function getAllApplications(req: AuthRequest, res: Response) {
     const applications = await prisma.application.findMany({
       where,
       include: {
-        job: {
-          select: { title: true, department: true },
-        },
-        user: {
-          select: { firstName: true, lastName: true, email: true },
-        },
+        job: { select: { title: true, department: true } },
+        user: { select: { firstName: true, lastName: true, email: true } },
       },
       orderBy: { createdAt: "desc" },
     });
-
     res.json(applications);
   } catch (error) {
-    logger.error("Get applications error:", error);
+    logger.error("Failed to fetch all applications:", error);
     res.status(500).json({ error: "Failed to fetch applications" });
   }
 }
 
+// 2. Get My Applications
 export async function getMyApplications(req: AuthRequest, res: Response) {
   try {
+    if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+    
     const applications = await prisma.application.findMany({
-      where: { userId: req.user!.id },
-      include: {
-        job: {
-          select: { title: true, department: true, location: true },
-        },
-      },
+      where: { userId: req.user.id },
+      include: { job: { select: { title: true, department: true, location: true } } },
       orderBy: { createdAt: "desc" },
     });
-
     res.json(applications);
   } catch (error) {
-    logger.error("Get my applications error:", error);
+    logger.error("Failed to fetch candidate applications:", error);
     res.status(500).json({ error: "Failed to fetch applications" });
   }
 }
 
+// 3. Create Application
 export async function createApplication(req: Request, res: Response) {
   try {
     const { jobId, firstName, lastName, email, phone, linkedIn, coverLetter } = req.body;
+    // Fixed missing backticks around the template literal
     const resumeUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
     const job = await prisma.job.findUnique({ where: { id: jobId } });
-    if (!job) {
-      return res.status(404).json({ error: "Job not found" });
-    }
+    if (!job) return res.status(404).json({ error: "Job not found" });
 
     const application = await prisma.application.create({
-      data: {
-        jobId,
-        firstName,
-        lastName,
-        email,
-        phone,
-        linkedIn,
-        resumeUrl,
-        coverLetter,
-      },
+      data: { jobId, firstName, lastName, email, phone, linkedIn, resumeUrl, coverLetter },
     });
 
-    console.log(">>> Triggering confirmation email for:", email);
-
     try {
+      // Fixed missing backticks around firstName and lastName
       await sendApplicationConfirmation(email, `${firstName} ${lastName}`, job.title);
-      console.log(">>> Confirmation email function executed without crashing");
     } catch (emailError) {
-      console.error(">>> Failed inside the email function block:", emailError);
       logger.error("Failed to send confirmation email:", emailError);
     }
 
-    logger.info(`Application created: ${application.id} for job ${jobId}`);
     res.status(201).json(application);
   } catch (error) {
-    logger.error("Create application error:", error);
+    logger.error("Failed to create application:", error);
     res.status(500).json({ error: "Failed to create application" });
   }
 }
 
+// 4. Update Application Status
 export async function updateApplicationStatus(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id as string; 
     const { status, notes } = req.body;
+    
+    // --> THIS IS THE SAFE SPOT FOR THE LOG <--
+    console.log("RECEIVED FROM FRONTEND:", req.body);
 
     const application = await prisma.application.update({
       where: { id },
-      data: { 
-        status: status as any, 
-        notes 
-      },
-      include: {
-        job: { select: { title: true } },
-      },
+      data: { status: status as any, notes },
+      include: { job: { select: { title: true } } }
     });
 
+    // Fixed missing OR operator (||)
     const jobTitle = (application as any).job?.title || "the role";
     const candidateName = `${application.firstName} ${application.lastName}`;
     const candidateEmail = application.email;
 
-    // EMAIL TRIGGER PIPELINE
     try {
-      if (status === "INTERVIEW_SCHEDULED") {
-        console.log(`>>> Triggering interview invite for: ${candidateEmail}`);
-        await sendInterviewInvitation(candidateEmail, candidateName, jobTitle, new Date().toLocaleDateString());
-      
-      } else if (status === "HR_ONBOARDING") {
-        console.log(`>>> Triggering HR Onboarding for: ${candidateEmail}`);
+      if (status === "UNDER_REVIEW") {
+        await sendUnderReviewEmail(candidateEmail, candidateName, jobTitle);
+      } 
+      else if (status === "INTERVIEW_SCHEDULED") {
+        await sendInterviewInvitation(candidateEmail, candidateName, jobTitle);
+      } 
+      else if (status === "INTERVIEW_COMPLETED") {
+        await sendInterviewCompletedEmail(candidateEmail, candidateName, jobTitle);
+      } 
+      else if (status === "APPROVED") {
+        await sendApprovedEmail(candidateEmail, candidateName, jobTitle);
+      } 
+      else if (status === "HR_ONBOARDING") {
         await sendHROnboarding(candidateEmail, candidateName, jobTitle);
-      
-      } else if (status === "APPROVED") {
-        console.log(`>>> Triggering Operations Alert for: ${candidateName}`);
-        await sendOperationsAlert(candidateName, jobTitle);
-      
-      } else if (status === "REJECTED") {
-        console.log(`>>> Triggering Rejection email for: ${candidateEmail}`);
+      } 
+      else if (status === "OPS_ONBOARDING") {
+        await sendOpsOnboardingCandidateEmail(candidateEmail, candidateName, jobTitle);
+        await sendOperationsInternalAlert(candidateName, jobTitle);
+      }
+      else if (status === "EMPLOYEE_ACTIVE") {
+        await sendEmployeeActiveEmail(candidateEmail, candidateName, jobTitle);
+      } 
+      // Fixed missing OR operator (||)
+      else if (status === "DECLINED" || status === "REJECTED") {
         await sendRejectionEmail(candidateEmail, candidateName, jobTitle);
       }
     } catch (emailError) {
-      console.error(`>>> Failed to send ${status} email:`, emailError);
+      // Fixed missing backticks
       logger.error(`Failed to send email for status ${status}:`, emailError);
     }
 
-    logger.info(`Application ${id} status updated to ${status}`);
     res.json(application);
   } catch (error) {
-    logger.error("Update application error:", error);
+    logger.error("Failed to update application status:", error);
     res.status(500).json({ error: "Failed to update application" });
   }
 }
 
+// 5. Delete Application
 export async function deleteApplication(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id as string; 
     await prisma.application.delete({ where: { id } });
-    logger.info(`Application deleted: ${id}`);
     res.json({ message: "Application deleted successfully" });
   } catch (error) {
-    logger.error("Delete application error:", error);
+    logger.error("Failed to delete application:", error);
     res.status(500).json({ error: "Failed to delete application" });
   }
 }

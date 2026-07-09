@@ -5,6 +5,9 @@ import compression from "compression";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import path from "path";
+import dns from "node:dns";
+// This forces Node to look up the IP address using the hosts file/IPv4 first
+dns.setDefaultResultOrder("ipv4first");
 
 import { env } from "./config/env";
 import { logger } from "./utils/logger";
