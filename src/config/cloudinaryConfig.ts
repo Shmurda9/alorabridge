@@ -15,8 +15,9 @@ const storage = new CloudinaryStorage({
   params: async (req, file) => {
     return {
       folder: 'resumes', // Automatically creates a folder named 'resumes' in your Cloudinary account
-      allowed_formats: ['pdf', 'doc', 'docx'], // Only accepts documents
-      resource_type: 'raw', // Crucial for non-image files like PDFs/Word docs
+      // 🚀 CHANGED: Added 'zip' to the list of allowed formats
+      allowed_formats: ['pdf', 'doc', 'docx', 'zip'], 
+      resource_type: 'raw', // Crucial for non-image files like PDFs/Word docs/ZIPs
       // Safe string addition to bypass template literal issues
       public_id: Date.now().toString() + '-' + file.originalname.split('.')[0],
     };
