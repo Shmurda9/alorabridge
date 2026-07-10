@@ -59,8 +59,9 @@ export async function getMyApplications(req: AuthRequest, res: Response) {
 export async function createApplication(req: Request, res: Response) {
   try {
     const { jobId, firstName, lastName, email, phone, linkedIn, coverLetter } = req.body;
-    // Fixed missing backticks around the template literal
-    const resumeUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    
+    // 🚀 CHANGED: Cloudinary automatically puts the final URL inside req.file.path
+    const resumeUrl = req.file ? req.file.path : null;
 
     const job = await prisma.job.findUnique({ where: { id: jobId } });
     if (!job) return res.status(404).json({ error: "Job not found" });
@@ -70,8 +71,8 @@ export async function createApplication(req: Request, res: Response) {
     });
 
     try {
-      // Fixed missing backticks around firstName and lastName
-      await sendApplicationConfirmation(email, `${firstName} ${lastName}`, job.title);
+      // 🚀 CHANGED: Using standard string addition to avoid backtick syntax errors
+      await sendApplicationConfirmation(email, firstName + " " + lastName, job.title);
     } catch (emailError) {
       logger.error("Failed to send confirmation email:", emailError);
     }
