@@ -17,7 +17,7 @@ const storage = new CloudinaryStorage({
       folder: 'resumes', // Automatically creates a folder named 'resumes' in your Cloudinary account
       allowed_formats: ['pdf', 'doc', 'docx'], // Only accepts documents
       resource_type: 'raw', // Crucial for non-image files like PDFs/Word docs
-      // FIX: Using standard string addition instead of $ symbols!
+      // Safe string addition to bypass template literal issues
       public_id: Date.now().toString() + '-' + file.originalname.split('.')[0],
     };
   },
