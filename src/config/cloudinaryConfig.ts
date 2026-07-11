@@ -13,13 +13,17 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => {
+    // Extract the file extension (e.g., 'pdf', 'docx', 'zip')
+    const ext = file.originalname.split('.').pop();
+    // Extract the file name without the extension
+    const baseName = file.originalname.split('.')[0];
+
     return {
-      folder: 'resumes', // Automatically creates a folder named 'resumes' in your Cloudinary account
-      // 🚀 CHANGED: Added 'zip' to the list of allowed formats
-      allowed_formats: ['pdf', 'doc', 'docx', 'zip'], 
-      resource_type: 'raw', // Crucial for non-image files like PDFs/Word docs/ZIPs
-      // Safe string addition to bypass template literal issues
-      public_id: Date.now().toString() + '-' + file.originalname.split('.')[0],
+      folder: 'resumes', 
+      resource_type: 'raw', 
+      // 🚀 CHANGED: Explicitly forcing the format so it doesn't say "N/A"
+      format: ext, 
+      public_id: Date.now().toString() + '-' + baseName,
     };
   },
 });
